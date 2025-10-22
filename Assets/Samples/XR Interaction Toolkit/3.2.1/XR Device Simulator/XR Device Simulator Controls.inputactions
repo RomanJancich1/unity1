@@ -1,4 +1,5 @@
 {
+    "version": 1,
     "name": "XR Device Simulator Controls",
     "maps": [
         {
@@ -312,7 +313,7 @@
                 {
                     "name": "negative",
                     "id": "2c01790c-a24a-4266-a2e9-74e2a1ca3fa7",
-                    "path": "<Keyboard>/q",
+                    "path": "",
                     "interactions": "",
                     "processors": "",
                     "groups": "",
@@ -323,7 +324,7 @@
                 {
                     "name": "positive",
                     "id": "f5223aed-93c0-4633-8aa3-c393ce890872",
-                    "path": "<Keyboard>/e",
+                    "path": "",
                     "interactions": "",
                     "processors": "",
                     "groups": "",
