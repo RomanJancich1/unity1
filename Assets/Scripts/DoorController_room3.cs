@@ -2,7 +2,7 @@
 
 public class DoorController : MonoBehaviour
 {
-    public Animator animator;  // voliteľné
+    public Animator animator;  
     public bool isLocked = true;
 
     void Awake() { isLocked = true; }

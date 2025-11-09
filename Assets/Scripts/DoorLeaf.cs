@@ -3,12 +3,12 @@
 [RequireComponent(typeof(Collider))]
 public class DoorLeafOpener : MonoBehaviour
 {
-    public MyDoorController door;   // odkaz na MyDoorController (na DoorPivot)
+    public MyDoorController door;   
 
     [Header("Dosah interakcie")]
     public bool requirePlayerInRange = true;
     public float useRange = 2.0f;
-    public Transform player;        // XR Origin alebo Main Camera
+    public Transform player;        
 
     void Awake()
     {
@@ -22,7 +22,7 @@ public class DoorLeafOpener : MonoBehaviour
         {
             if (!door) return;
             if (!requirePlayerInRange || IsPlayerCloseEnough())
-                door.ToggleDoor();
+                door.TryToggle();
         }
     }
 
@@ -34,11 +34,10 @@ public class DoorLeafOpener : MonoBehaviour
         return Vector3.Distance(a, b) <= useRange;
     }
 
-    // môžeš volať aj z XR eventu namiesto klávesy E
     public void Use()
     {
         if (!door) return;
         if (!requirePlayerInRange || IsPlayerCloseEnough())
-            door.ToggleDoor();
+            door.TryToggle();
     }
 }

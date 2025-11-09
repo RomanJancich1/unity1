@@ -2,22 +2,21 @@
 
 public class MyDoorController : MonoBehaviour
 {
-    [Header("Open motion")]
-    public float openAngle = 90f;   // +/− podľa smeru
-    public float openTime = 0.4f;
+    [Header("Motion")]
+    public float openAngle = 90f;      
+    public float openTime = 0.40f;
 
-    [Header("Gating")]
-    public bool handleInput = true;          // E na klávesnici
-    public KeyCode interactKey = KeyCode.E;
-    public bool requireUnlocked = true;      // musí byť odomknuté?
-    public bool requirePlayerInRange = true; // musí byť hráč v triggri?
-
-    [Header("State (runtime)")]
-    public bool isLocked = true;      // zamknuté, kým puzzle nesplníš
-    public bool playerInRange = false;
+    [Header("SFX")]
+    public AudioSource audioSrc;       
+    public AudioClip clipOpen;         
+    public AudioClip clipClose;        
+    public AudioClip clipLocked;       
+    public AudioClip clipUnlocked;     
 
     Quaternion rotClosed, rotOpen;
     bool isOpen, isMoving;
+
+    [SerializeField] bool isLocked = true;  
 
     void Awake()
     {
@@ -25,28 +24,37 @@ public class MyDoorController : MonoBehaviour
         rotOpen = rotClosed * Quaternion.Euler(0f, openAngle, 0f);
     }
 
-    void Update()
+    
+    public void Lock() => isLocked = true;
+
+    public void Unlock()
     {
-        if (!handleInput) return;
-        if (Input.GetKeyDown(interactKey))
-            TryToggleDoor(); // rešpektuje lock a range
+        if (isLocked && clipUnlocked) audioSrc?.PlayOneShot(clipUnlocked);
+        isLocked = false;
     }
 
-    // ▶ Volaj toto (nie ToggleDoor) z triggerov / vstupu
-    public void TryToggleDoor()
-    {
-        if (requireUnlocked && isLocked) return;
-        if (requirePlayerInRange && !playerInRange) return;
-        ToggleDoor(); // pôvodné správanie
-    }
-
-    // ▼ Tvoj pôvodný toggle (ponechaný bezo zmeny)
-    public void ToggleDoor()
+    
+    public void TryToggle()
     {
         if (isMoving) return;
+
+        if (isLocked)
+        {
+            if (clipLocked) audioSrc?.PlayOneShot(clipLocked);
+            return;
+        }
+
+        bool goingToOpen = !isOpen;
         StopAllCoroutines();
-        StartCoroutine(RotateTo(isOpen ? rotClosed : rotOpen));
-        isOpen = !isOpen;
+        StartCoroutine(RotateTo(goingToOpen ? rotOpen : rotClosed));
+
+        if (audioSrc)
+        {
+            if (goingToOpen && clipOpen) audioSrc.PlayOneShot(clipOpen);
+            if (!goingToOpen && clipClose) audioSrc.PlayOneShot(clipClose);
+        }
+
+        isOpen = goingToOpen;
     }
 
     System.Collections.IEnumerator RotateTo(Quaternion target)
@@ -57,15 +65,11 @@ public class MyDoorController : MonoBehaviour
         while (t < 1f)
         {
             t += Time.deltaTime / Mathf.Max(0.01f, openTime);
-            float s = t * t * (3f - 2f * t);   // smoothstep
+            float s = t * t * (3f - 2f * t); 
             transform.localRotation = Quaternion.Slerp(start, target, s);
             yield return null;
         }
         transform.localRotation = target;
         isMoving = false;
     }
-
-    // 🔒 API na puzzle/trigger skripty:
-    public void Lock() => isLocked = true;
-    public void Unlock() => isLocked = false;
 }

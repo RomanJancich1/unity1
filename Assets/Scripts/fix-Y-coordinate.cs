@@ -1,7 +1,7 @@
 using UnityEngine;
 public class LockYHeight : MonoBehaviour
 {
-    public float lockedY = 0f;   // výška podlahy v tvojej scéne
+    public float lockedY = 0f;   
     void LateUpdate()
     {
         var p = transform.position;

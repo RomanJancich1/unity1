@@ -26,7 +26,6 @@ public class ButtonPadController : MonoBehaviour
 
     void Awake()
     {
-        // Automaticky nazbieraj tlačidlá ak nie sú zadané ručne
         if (buttons == null || buttons.Count == 0)
             buttons = new List<ButtonButton>(GetComponentsInChildren<ButtonButton>(true));
         foreach (var b in buttons) if (b) b.pad = this;
@@ -42,11 +41,9 @@ public class ButtonPadController : MonoBehaviour
     {
         if (!_accepting) return;
 
-        // počas zadávania – zvýrazni práve stlačené tlačidlo na ORANŽOVO a nechaj ho tak
         if (btn) { btn.SetBaseColor(btn.armedColor); _pressedButtons.Add(btn); }
         _input.Add(id);
 
-        // Po naplnení celej dĺžky sekvencie vyhodnoť naraz
         if (_input.Count < correctSequence.Count)
             return;
 
@@ -58,7 +55,6 @@ public class ButtonPadController : MonoBehaviour
             BlinkAll(Color.green, 3);
             if (door) door.Unlock();
             OnSolved?.Invoke();
-            // Po krátkej chvíli vráť tlačidlá do idle a resetuj stav (ak chceš ponechať zelené, tento riadok vynechaj)
             Invoke(nameof(ResetAfterSuccess), 0.5f);
         }
         else
@@ -89,7 +85,7 @@ public class ButtonPadController : MonoBehaviour
     {
         _input.Clear();
         _pressedButtons.Clear();
-        SetAllIdle(); // alebo nechaj zelené: vyhoď tento riadok, ak chceš „permanentný“ success look
+        SetAllIdle(); 
         _accepting = true;
     }
 

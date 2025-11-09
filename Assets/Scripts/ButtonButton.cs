@@ -6,15 +6,15 @@ public class ButtonButton : MonoBehaviour
 {
     public int id = 1;
     public ButtonPadController pad;
-    public Renderer rend; // pretiahni Mesh Renderer (alebo necháme auto-find)
+    public Renderer rend; 
 
-    public Color idleColor = Color.white;                 // „vypnuté“
-    public Color armedColor = new Color(1f, 0.75f, 0.2f, 1f); // oranžová pri zadávaní
+    public Color idleColor = Color.white;                 
+    public Color armedColor = new Color(1f, 0.75f, 0.2f, 1f); 
     public Color successColor = Color.green;
     public Color failColor = Color.red;
 
-    static readonly int BaseColorID = Shader.PropertyToID("_BaseColor"); // URP
-    static readonly int ColorID = Shader.PropertyToID("_Color");     // Built-in
+    static readonly int BaseColorID = Shader.PropertyToID("_BaseColor"); 
+    static readonly int ColorID = Shader.PropertyToID("_Color");     
 
     MaterialPropertyBlock mpb;
 
@@ -33,9 +33,9 @@ public class ButtonButton : MonoBehaviour
         if (!rend) return;
         rend.GetPropertyBlock(mpb);
         if (rend.sharedMaterial != null && rend.sharedMaterial.HasProperty(BaseColorID))
-            mpb.SetColor(BaseColorID, c);   // URP Lit
+            mpb.SetColor(BaseColorID, c);   
         else
-            mpb.SetColor(ColorID, c);       // Standard
+            mpb.SetColor(ColorID, c);       
         rend.SetPropertyBlock(mpb);
     }
 
