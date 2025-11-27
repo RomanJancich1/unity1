@@ -5,11 +5,8 @@ using TMPro;
 public class NumberTileAutoLabel : MonoBehaviour
 {
     [Header("Layout")]
-    [Tooltip("Hrúbka odsadenia od povrchu kocky (kvôli Z-fightingu).")]
     public float faceOffset = 0.005f;       
-    [Tooltip("Šírka/výška textovej plochy na tvári kocky v lokálnych jednotkách kocky.")]
     public float faceSize = 0.22f;          
-    [Tooltip("Veľkosť fontu (autoSizing on, ale toto je max).")]
     public float fontSize = 0.22f;
     public Color fontColor = Color.black;
 
@@ -60,7 +57,7 @@ public class NumberTileAutoLabel : MonoBehaviour
         tmp.alignment = TextAlignmentOptions.Center;
         tmp.color = fontColor;
         tmp.enableAutoSizing = true;
-        tmp.fontSizeMax = fontSize * 100f;   
+        tmp.fontSizeMax = fontSize * 100f;  
         tmp.fontSizeMin = tmp.fontSizeMax * 0.3f;
         tmp.text = "0";                      
         tmp.overflowMode = TextOverflowModes.Overflow;
@@ -94,7 +91,7 @@ public class NumberTileAutoLabel : MonoBehaviour
     {
         var faces = transform.Find("Faces");
         if (!faces) return;
-        string t = tile ? tile.value.ToString() : "0";
+        string t = tile ? tile.Value.ToString() : "0";
         foreach (Transform f in faces)
         {
             var tmp = f.GetComponent<TextMeshPro>();

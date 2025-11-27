@@ -1,34 +1,23 @@
 ﻿using UnityEngine;
 
-[RequireComponent(typeof(Collider))]
-public class DoorTriggerGate : MonoBehaviour
+public class DoorTrigger_room3 : MonoBehaviour
 {
-    public DoorController door;                 
-    public ButtonPadController puzzle;          
+    public MultiStagePadController pad;
+    public DoorController door;
 
-    Collider triggerCol;
-
-    void Awake()
+    void OnEnable()
     {
-        triggerCol = GetComponent<Collider>();
-        triggerCol.isTrigger = true;            
-    }
-
-    void Start()
-    {
-        triggerCol.enabled = false;
         if (door) door.Lock();
-
-        if (puzzle) puzzle.OnSolved.AddListener(() =>
-        {
-            triggerCol.enabled = true;
-            if (door) door.Unlock();
-        });
+        if (pad) pad.OnSolvedAll.AddListener(HandleSolved);
     }
 
-    void OnTriggerEnter(Collider other)
+    void OnDisable()
     {
-        if (!door || door.isLocked) return;
-        if (door.animator) door.animator.SetTrigger("Open");
+        if (pad) pad.OnSolvedAll.RemoveListener(HandleSolved);
+    }
+
+    void HandleSolved()
+    {
+        if (door) door.Unlock();
     }
 }

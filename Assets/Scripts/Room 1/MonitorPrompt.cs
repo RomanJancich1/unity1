@@ -1,12 +1,12 @@
-using UnityEngine;
+﻿using UnityEngine;
 using TMPro;
 
 public class MonitorMenu : MonoBehaviour
 {
     [Header("UI Roots")]
-    public GameObject introUI;         
-    public TMP_Text titleText;         
-    public TMP_Text bodyText;         
+    public GameObject introUI;
+    public TMP_Text titleText;
+    public TMP_Text bodyText;
 
     [Header("Door to unlock on Continue")]
     public MyDoorController doorToUnlock;
@@ -33,6 +33,9 @@ public class MonitorMenu : MonoBehaviour
             doorToUnlock.Unlock();
             alreadyUnlocked = true;
         }
+
+        if (TimerManager.Instance != null)
+            TimerManager.Instance.StartTimer();
     }
 
     public void EscapeMenu()

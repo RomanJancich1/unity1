@@ -1,9 +1,10 @@
 using UnityEngine;
 
-[DisallowMultipleComponent]
+[RequireComponent(typeof(UnityEngine.XR.Interaction.Toolkit.Interactables.XRGrabInteractable))]
 public class NumberTile : MonoBehaviour
 {
-    [Min(0)] public int value = 1;
+    [Tooltip("Hodnota tejto kocky")]
+    public int Value = 1;
 
-    void OnValidate() { gameObject.name = $"Cube_{value}"; }
+    public int GetValue() => Value;
 }

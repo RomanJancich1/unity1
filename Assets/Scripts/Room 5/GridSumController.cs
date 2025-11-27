@@ -1,103 +1,174 @@
-﻿using UnityEngine;
-using UnityEngine.Events;
+﻿using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
 
 public class GridSumController : MonoBehaviour
 {
-    [Header("Grid (row-major, length must be N*N)")]
-    public SnapSocket[] sockets = new SnapSocket[16];
-    [Min(2)] public int N = 4;
+    [Header("Grid")]
+    public int gridSize = 4;
+    public int targetSum = 32;
+    public GridCells[] cells;
 
-    [Header("Target")]
-    public int targetSum = 32;       
-    public bool checkDiagonals = false; 
+    [Header("Door")]
+    public MyDoorController door;
 
-    [Header("Limits (optional)")]
-    public int maxPlacements = 0;    
-    public float timeLimitSec = 0f;  
-
-    [Header("UI (optional)")]
-    public TMPro.TextMeshPro statusText;
+    [Header("Colors")]
+    public Color idleColor = Color.white;
     public Color okColor = Color.green;
-    public Color waitColor = new Color(1f, 0.8f, 0.2f, 1f);
-    public Color failColor = Color.red;
+    public Color badColor = Color.red;
 
-    [Header("Events")]
-    public UnityEvent OnSolved;
-    public UnityEvent OnFailed;
-
-    int placements;
-    float t0;
-    bool solved;
+    [Header("Blink")]
+    public int blinkCount = 3;
+    public float blinkOnTime = 0.12f;
+    public float blinkOffTime = 0.08f;
 
     void Start()
     {
-        t0 = Time.time;
-        Show($"Place all cubes (rows/cols must sum to {targetSum})", waitColor);
+        SetAllPlateColors(idleColor);
     }
 
-    void Update()
+    public void Recalculate()
     {
-        if (solved) return;
+        EvaluateGrid();
+    }
 
-        if (timeLimitSec > 0f && Time.time - t0 > timeLimitSec)
-        {
-            Fail("Time up");
-            return;
-        }
+    void EvaluateGrid()
+    {
+        if (cells == null || cells.Length == 0) return;
 
-        for (int i = 0; i < N * N; i++)
+        Color[] colorBuffer = new Color[cells.Length];
+        for (int i = 0; i < colorBuffer.Length; i++)
+            colorBuffer[i] = idleColor;
+
+        bool allLinesFull = true;
+        bool allLinesCorrect = true;
+
+        for (int r = 0; r < gridSize; r++)
         {
-            if (sockets[i].current == null)
+            int sum = 0;
+            bool full = true;
+            List<int> idxs = new();
+
+            for (int i = 0; i < cells.Length; i++)
             {
-                Show("Place all cubes", waitColor);
-                return;
+                if (cells[i].row != r) continue;
+
+                idxs.Add(i);
+                int? v = GetCellValue(cells[i]);
+                if (v.HasValue) sum += v.Value;
+                else full = false;
+            }
+
+            if (!full)
+            {
+                allLinesFull = false;
+                continue;
+            }
+
+            if (sum != targetSum)
+            {
+                allLinesCorrect = false;
+                foreach (int idx in idxs)
+                    colorBuffer[idx] = badColor;
+            }
+            else
+            {
+                foreach (int idx in idxs)
+                    if (colorBuffer[idx] != badColor)
+                        colorBuffer[idx] = okColor;
             }
         }
 
-        int[] v = new int[N * N];
-        for (int i = 0; i < N * N; i++) v[i] = sockets[i].current.value;
-
-        for (int r = 0; r < N; r++)
+        for (int c = 0; c < gridSize; c++)
         {
             int sum = 0;
-            for (int c = 0; c < N; c++) sum += v[r * N + c];
-            if (sum != targetSum) { Show($"Row {r + 1} ≠ {targetSum}", failColor); return; }
+            bool full = true;
+            List<int> idxs = new();
+
+            for (int i = 0; i < cells.Length; i++)
+            {
+                if (cells[i].column != c) continue;
+
+                idxs.Add(i);
+                int? v = GetCellValue(cells[i]);
+                if (v.HasValue) sum += v.Value;
+                else full = false;
+            }
+
+            if (!full)
+            {
+                allLinesFull = false;
+                continue;
+            }
+
+            if (sum != targetSum)
+            {
+                allLinesCorrect = false;
+                foreach (int idx in idxs)
+                    colorBuffer[idx] = badColor;
+            }
+            else
+            {
+                foreach (int idx in idxs)
+                    if (colorBuffer[idx] != badColor)
+                        colorBuffer[idx] = okColor;
+            }
         }
-        for (int c = 0; c < N; c++)
+
+        for (int i = 0; i < cells.Length; i++)
         {
-            int sum = 0;
-            for (int r = 0; r < N; r++) sum += v[r * N + c];
-            if (sum != targetSum) { Show($"Col {c + 1} ≠ {targetSum}", failColor); return; }
+            if (cells[i].plateRenderer != null)
+                cells[i].plateRenderer.material.color = colorBuffer[i];
         }
-        if (checkDiagonals)
+
+        if (allLinesFull)
         {
-            int d1 = 0, d2 = 0;
-            for (int i = 0; i < N; i++) { d1 += v[i * N + i]; d2 += v[i * N + (N - 1 - i)]; }
-            if (d1 != targetSum || d2 != targetSum) { Show("Diagonal mismatch", failColor); return; }
+            StopAllCoroutines();
+            if (allLinesCorrect)
+            {
+                if (door) door.Unlock();
+                StartCoroutine(BlinkAll(okColor));
+            }
+            else
+            {
+                StartCoroutine(BlinkAll(badColor));
+            }
         }
-
-        solved = true;
-        Show("Solved!", okColor);
-        OnSolved?.Invoke();
     }
 
-    public void CountPlacement()
+    int? GetCellValue(GridCells cell)
     {
-        if (maxPlacements <= 0) return;
-        placements++;
-        if (placements > maxPlacements) Fail("Move limit exceeded");
+        var socket = cell.GetComponent<UnityEngine.XR.Interaction.Toolkit.Interactors.XRSocketInteractor>();
+        if (socket == null || !socket.hasSelection)
+            return null;
+
+        var interactable = socket.firstInteractableSelected;
+        if (interactable == null)
+            return null;
+
+        var tile = interactable.transform.GetComponent<NumberTile>();
+        if (tile == null)
+            return null;
+
+        return tile.Value;
     }
 
-    void Fail(string why)
+
+    IEnumerator BlinkAll(Color c)
     {
-        Show(why, failColor);
-        OnFailed?.Invoke();
+        for (int i = 0; i < blinkCount; i++)
+        {
+            SetAllPlateColors(c);
+            yield return new WaitForSeconds(blinkOnTime);
+            SetAllPlateColors(idleColor);
+            yield return new WaitForSeconds(blinkOffTime);
+        }
     }
 
-    void Show(string msg, Color c)
+    void SetAllPlateColors(Color c)
     {
-        if (!statusText) return;
-        statusText.text = msg;
-        statusText.color = c;
+        foreach (var cell in cells)
+            if (cell.plateRenderer)
+                cell.plateRenderer.material.color = c;
     }
 }
